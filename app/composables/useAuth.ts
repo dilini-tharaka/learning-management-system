@@ -6,8 +6,10 @@ interface AuthResponse {
     email: string;
     name: string | null;
     role: string;
+    status: string;
   };
-  accessToken: string;
+  accessToken?: string;
+  message?: string;
 }
 
 export const useAuth = () => {
@@ -22,15 +24,15 @@ export const useAuth = () => {
       });
 
       user.value = response.user;
-      accessToken.value = response.accessToken;
+      accessToken.value = response.accessToken || null;
 
       // Check for redirect
-      const redirect = useState('redirect')
-      const redirectPath = redirect.value || '/console'
-      redirect.value = null // Clear the redirect
-      
+      const redirect = useState("redirect");
+      const redirectPath = redirect.value || "/console";
+      redirect.value = null; // Clear the redirect
+
       // Navigate to saved path or default
-      await navigateTo(redirectPath)
+      await navigateTo(redirectPath);
 
       return response;
     } catch (error: any) {
@@ -53,8 +55,24 @@ export const useAuth = () => {
         body: credentials,
       });
 
-      user.value = response.user;
-      accessToken.value = response.accessToken;
+      // Only set auth state if user is ACTIVE and tokens are provided
+      if (response.user.status === "ACTIVE" && response.accessToken) {
+        user.value = response.user;
+        accessToken.value = response.accessToken;
+        await navigateTo("/console/setup-account");
+      } else {
+        // For pending users, show success message and redirect to sign in
+        const toast = useToast();
+        toast.add({
+          title: "Account Created",
+          description:
+            response.message ||
+            "Please wait for administrator approval before signing in.",
+          color: "green",
+          timeout: 8000,
+        });
+        await navigateTo("/auth/sign-in");
+      }
 
       return response;
     } catch (error: any) {
@@ -75,7 +93,7 @@ export const useAuth = () => {
       // user.value = null;
       // accessToken.value = null;
       // Force reload to clear any cached state
-      window.location.href = '/auth/sign-in'
+      window.location.href = "/auth/sign-in";
     } catch (error) {
       console.error("Sign out error:", error);
     }

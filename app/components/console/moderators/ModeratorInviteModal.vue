@@ -1,5 +1,8 @@
 <template>
-  <UModal :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)">
+  <UModal
+    :model-value="modelValue"
+    @update:model-value="$emit('update:modelValue', $event)"
+  >
     <UCard
       :ui="{
         ring: '',
@@ -44,51 +47,58 @@
 </template>
 
 <script setup lang="ts">
-import { z } from 'zod'
+import { z } from "zod";
+import { $apiFetch } from "~~/app/composables/useApiFetch";
+import { useApiError } from "~~/app/composables/useApiError";
+import type { FormSubmitEvent } from "#ui/types";
 
 const props = defineProps<{
-  modelValue: boolean
-}>()
+  modelValue: boolean;
+}>();
 
-const emit = defineEmits(['update:modelValue', 'invite'])
-
-const loading = ref(false)
-const toast = useToast()
+const emit = defineEmits(["update:modelValue", "invite"]);
+const loading = ref(false);
+const toast = useToast();
+const { handle } = useApiError();
 
 const form = ref({
   email: "",
-})
+});
 
 const inviteModeratorSchema = z.object({
-  email: z.string().email(),
-})
+  email: z.string().email("Valid email is required"),
+});
 
 const closeModal = () => {
   form.value = {
     email: "",
-  }
-  emit('update:modelValue', false)
-}
+  };
+  emit("update:modelValue", false);
+};
 
-const onSubmit = async (event: any) => {
+const onSubmit = async (event: FormSubmitEvent<typeof form.value>) => {
   try {
-    loading.value = true
-    // TODO: Implement API call
-    emit('invite', event.data)
+    loading.value = true;
+
+    await $apiFetch("/api/invitation", {
+      method: "POST",
+      body: {
+        email: event.data.email,
+        role: "MODERATOR",
+      },
+    });
+
     toast.add({
       title: "Success",
       description: "Moderator invitation sent successfully",
       color: "green",
-    })
-    closeModal()
+    });
+    closeModal();
+    emit("invite", event.data);
   } catch (error: any) {
-    toast.add({
-      title: "Error",
-      description: error.message,
-      color: "red",
-    })
+    handle(error, { title: "Error" });
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 </script>

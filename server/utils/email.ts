@@ -31,7 +31,7 @@ interface SendMailOptions {
   to: string;
   subject: string;
   template: string;
-  context: Record<string, string>;
+  context: Record<string, any>;
 }
 
 export async function sendMail({ to, subject, template, context }: SendMailOptions) {

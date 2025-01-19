@@ -9,7 +9,14 @@ datasource db {
 
 enum Role {
     ADMIN
-    USER
+    MODERATOR
+    STUDENT
+}
+
+enum Status {
+    PENDING
+    ACTIVE
+    SUSPENDED
 }
 
 model User {
@@ -17,7 +24,8 @@ model User {
     email         String         @unique
     name          String?
     password      String
-    role          Role           @default(USER)
+    status        Status         @default(PENDING)
+    role          Role           @default(STUDENT)
     refreshTokens RefreshToken[]
     createdAt     DateTime       @default(now())
     updatedAt     DateTime       @updatedAt
@@ -59,6 +67,7 @@ model Invitation {
     expiresAt  DateTime
     token      String           @unique
     status     InvitationStatus @default(PENDING)
+    metadata   Json?            @default("{}")
     createdAt  DateTime         @default(now())
     updatedAt  DateTime         @updatedAt
 }

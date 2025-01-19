@@ -1,32 +1,31 @@
 <template>
   <USelect
-    v-model="localValue"
-    :options="grades"
+    v-model="(localValue as number)"
+    :options="formattedGrades"
     :placeholder="placeholder"
-    @update:modelValue="$emit('update:modelValue', $event)"
   />
 </template>
 
 <script setup lang="ts">
 const props = defineProps<{
-  modelValue: string
-  placeholder?: string
-}>()
+  modelValue: number | null;
+  placeholder?: string;
+}>();
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(["update:modelValue"]);
 
 const localValue = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
-})
+  // Convert the string value from USelect to number
+  set: (value) => emit("update:modelValue", value ? Number(value) : null),
+});
 
-// Centralized grade options
-const grades = [
-  'Grade 6',
-  'Grade 7',
-  'Grade 8',
-  'Grade 9',
-  'Grade 10',
-  'Grade 11'
-]
+const grades = [6, 7, 8, 9, 10, 11];
+
+const formattedGrades = computed(() => 
+  grades.map(grade => ({
+    label: `Grade ${grade}`,
+    value: grade.toString(), // Convert to string for USelect
+  }))
+);
 </script>

@@ -33,7 +33,7 @@
 
         <!-- Users Table -->
         <UTable
-          :rows="paginatedUsers"
+          :rows="paginatedStudents"
           :columns="columns"
           :loading="refreshing"
           :ui="{
@@ -49,20 +49,14 @@
               />
               <div>
                 <div class="font-medium">{{ row.name || '—' }}</div>
-                <div class="text-sm text-gray-500 dark:text-zinc-400">{{ row.email }}</div>
+                <div class="text-sm text-gray-500 dark:text-zinc-400">
+                  {{ row.email }}
+                  <span v-if="row.grade" class="ml-2 text-xs bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded">
+                    Grade {{ row.grade }}
+                  </span>
+                </div>
               </div>
             </div>
-          </template>
-
-          <template #role-data="{ row }">
-            <UBadge
-              :color="row.role === 'ADMIN' ? 'primary' : 'gray'"
-              variant="soft"
-              size="sm"
-              class="capitalize"
-            >
-              {{ row.role.toLowerCase() }}
-            </UBadge>
           </template>
 
           <template #status-data="{ row }">
@@ -76,21 +70,10 @@
             </UBadge>
           </template>
 
-          <template #lastActive-data="{ row }">
-            <div class="flex items-center gap-2">
-              <span class="text-sm text-gray-500 dark:text-zinc-400">
-                {{ row.lastActive || 'Never' }}
-              </span>
-              <UButton 
-                v-if="row.status === 'Pending'"
-                variant="link" 
-                color="primary" 
-                size="xs"
-                @click="resendInvitation(row)"
-              >
-                Resend
-              </UButton>
-            </div>
+          <template #invitedBy-data="{ row }">
+            <span v-if="row.isPendingInvitation" class="text-sm text-gray-500">
+              {{ row.invitedBy }}
+            </span>
           </template>
 
           <template #actions-data="{ row }">
@@ -111,7 +94,7 @@
         <div class="flex justify-center">
           <UPagination
             v-model="currentPage"
-            :total="filteredUsers.length"
+            :total="filteredStudents.length"
             :per-page="perPage"
             :ui="{
               wrapper: 'gap-1',
@@ -131,80 +114,73 @@
 </template>
 
 <script setup lang="ts">
+import type { Student, StudentsResponse } from '~/types/student'
+
 const refreshing = ref(false)
 const showInviteModal = ref(false)
+const toast = useToast()
 
 // Filters
 const search = ref('')
-const role = ref('All Roles')
 const status = ref('All Status')
 
-// Mock data
-const users = ref([
-  {
-    id: 1,
-    name: 'John Doe',
-    email: 'john@example.com',
-    role: 'ADMIN',
-    status: 'Active',
-    lastActive: '2 hours ago',
-    grade: null
-  },
-  {
-    id: 2,
-    email: 'jane@example.com',
-    role: 'USER',
-    status: 'Pending',
-    lastActive: null
-  },
-  {
-    id: 3,
-    name: 'Mike Smith',
-    email: 'mike@example.com',
-    role: 'USER',
-    status: 'Suspended',
-    lastActive: '5 days ago'
+// Students data
+const students = ref<Student[]>([])
+
+// Fetch students data
+const fetchStudents = async () => {
+  try {
+    refreshing.value = true
+    const response = await $apiFetch<StudentsResponse>('/api/students')
+    students.value = response.students
+  } catch (error: any) {
+    toast.add({
+      title: 'Error',
+      description: error.message || 'Failed to load students',
+      color: 'red'
+    })
+  } finally {
+    refreshing.value = false
   }
-])
+}
+
+// Load data on mount
+onMounted(fetchStudents)
 
 // Pagination
 const currentPage = ref(1)
 const perPage = ref(10)
 
 // Computed
-const filteredUsers = computed(() => {
-  return users.value.filter(user => {
+const filteredStudents = computed(() => {
+  return students.value.filter(student => {
     const matchesSearch = search.value === '' || 
-      user.email.toLowerCase().includes(search.value.toLowerCase()) ||
-      (user.name?.toLowerCase().includes(search.value.toLowerCase()))
-    const matchesRole = role.value === 'All Roles' || user.role === role.value
-    const matchesStatus = status.value === 'All Status' || user.status === status.value
-    return matchesSearch && matchesRole && matchesStatus
+      student.email.toLowerCase().includes(search.value.toLowerCase()) ||
+      (student.name?.toLowerCase()?.includes(search.value.toLowerCase()))
+    const matchesStatus = status.value === 'All Status' || student.status === status.value
+    return matchesSearch && matchesStatus
   })
 })
 
-const paginatedUsers = computed(() => {
+const paginatedStudents = computed(() => {
   const start = (currentPage.value - 1) * perPage.value
   const end = start + perPage.value
-  return filteredUsers.value.slice(start, end)
+  return filteredStudents.value.slice(start, end)
 })
 
+// Updated columns definition
 const columns = [
   {
     key: 'name',
-    label: 'User',
-  },
-  {
-    key: 'role',
-    label: 'Role',
+    label: 'Student',
   },
   {
     key: 'status',
     label: 'Status',
   },
   {
-    key: 'lastActive',
-    label: 'Last Activity',
+    key: 'invitedBy',
+    label: 'Invited By',
   },
   {
     key: 'actions',
@@ -213,92 +189,78 @@ const columns = [
   }
 ]
 
-// Methods
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'Active': return 'green'
-    case 'Pending': return 'orange'
-    case 'Suspended': return 'red'
-    default: return 'gray'
+// Simulated actions
+const simulateAction = async (action: string, student: Student) => {
+  try {
+    refreshing.value = true
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    toast.add({
+      title: 'Success',
+      description: `Successfully ${action} student: ${student.email}`,
+      color: 'green'
+    })
+    
+    await fetchStudents() // Refresh list after action
+  } catch (error: any) {
+    toast.add({
+      title: 'Error',
+      description: error.message || `Failed to ${action} student`,
+      color: 'red'
+    })
+  } finally {
+    refreshing.value = false
   }
 }
 
-const getUserActions = (user: any) => {
+const getUserActions = (student: Student) => {
   const mainActions = []
   const dangerActions = []
-  
-  if (user.role === 'USER') {
+
+  if (student.status === 'ACTIVE') {
     mainActions.push({
-      label: 'Promote to Admin',
-      icon: 'i-heroicons-shield-check',
-      click: () => promoteUser(user)
+      label: 'Suspend Student',
+      icon: 'i-heroicons-lock-closed',
+      click: () => simulateAction('suspend', student)
+    })
+  } else if (student.status === 'SUSPENDED') {
+    mainActions.push({
+      label: 'Reactivate Student',
+      icon: 'i-heroicons-lock-open',
+      click: () => simulateAction('reactivate', student)
     })
   }
 
-  if (user.status === 'Active') {
+  if (student.isPendingInvitation) {
     mainActions.push({
-      label: 'Suspend User',
-      icon: 'i-heroicons-lock-closed',
-      click: () => suspendUser(user)
-    })
-  } else if (user.status === 'Suspended') {
-    mainActions.push({
-      label: 'Reactivate User',
-      icon: 'i-heroicons-lock-open',
-      click: () => reactivateUser(user)
+      label: 'Resend Invitation',
+      icon: 'i-heroicons-envelope',
+      click: () => simulateAction('resend invitation to', student)
     })
   }
 
   dangerActions.push({
-    label: 'Delete User',
+    label: 'Delete Student',
     icon: 'i-heroicons-trash',
-    click: () => deleteUser(user)
+    click: () => simulateAction('delete', student)
   })
 
   return [mainActions, dangerActions]
 }
 
-// Actions
-const refreshData = async () => {
-  refreshing.value = true
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  refreshing.value = false
+// Invite student handler
+const inviteStudent = async () => {
+  await fetchStudents() // Refresh list after new invitation
 }
 
-const promoteUser = async (user: any) => {
-  // TODO: Implement promotion logic
-  user.role = 'ADMIN'
-}
-
-const suspendUser = async (user: any) => {
-  // TODO: Implement suspension logic
-  user.status = 'Suspended'
-}
-
-const reactivateUser = async (user: any) => {
-  // TODO: Implement reactivation logic
-  user.status = 'Active'
-}
-
-const deleteUser = async (user: any) => {
-  // TODO: Implement deletion logic
-  users.value = users.value.filter(u => u.id !== user.id)
-}
-
-const inviteStudent = async (data: any) => {
-  users.value.push({
-    id: Date.now(),
-    email: data.email,
-    name: data.name,
-    grade: data.grade,
-    role: 'STUDENT',
-    status: 'Pending',
-    lastActive: null
-  })
-}
-
-const resendInvitation = async (user: any) => {
-  // TODO: Implement resend logic
-  console.log('Resending invitation to:', user.email)
+// Status color helper
+const getStatusColor = (status: Student['status']) => {
+  switch (status) {
+    case 'ACTIVE': return 'green'
+    case 'PENDING': return 'orange'
+    case 'SUSPENDED': return 'red'
+    default: return 'gray'
+  }
 }
 </script>

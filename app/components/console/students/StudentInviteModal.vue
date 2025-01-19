@@ -60,42 +60,59 @@
 <script setup lang="ts">
 import { z } from 'zod'
 import GradeSelector from './GradeSelector.vue'
+import { $apiFetch } from '~~/app/composables/useApiFetch'
+import { useApiError } from '~~/app/composables/useApiError'
+import type { FormSubmitEvent } from "#ui/types"
 
 const props = defineProps<{
   modelValue: boolean
 }>()
 
 const emit = defineEmits(['update:modelValue', 'invite'])
-
 const loading = ref(false)
 const toast = useToast()
+const { handle } = useApiError()
 
 const form = ref({
   email: "",
   name: "",
-  grade: "",
+  grade: null as number | null,
 })
 
 const inviteStudentSchema = z.object({
   email: z.string().email(),
   name: z.string().min(1, 'Name is required'),
-  grade: z.string().min(1, 'Grade is required'),
+  grade: z.number({ required_error: 'Grade is required' }).int().min(6).max(11)
 })
 
 const closeModal = () => {
   form.value = {
     email: "",
     name: "",
-    grade: "",
+    grade: null,
   }
   emit('update:modelValue', false)
 }
 
-const onSubmit = async (event: any) => {
+const onSubmit = async (event: FormSubmitEvent<typeof form.value>) => {
   try {
     loading.value = true
-    // TODO: Implement API call
-    emit('invite', event.data)
+    
+    // Ensure grade is a number before sending
+    const grade = Number(event.data.grade)
+    
+    await $apiFetch('/api/invitation', {
+      method: 'POST',
+      body: {
+        email: event.data.email,
+        role: 'STUDENT',
+        metadata: {
+          studentName: event.data.name,
+          studentGrade: grade
+        }
+      }
+    })
+
     toast.add({
       title: "Success",
       description: "Student invitation sent successfully",
@@ -103,11 +120,7 @@ const onSubmit = async (event: any) => {
     })
     closeModal()
   } catch (error: any) {
-    toast.add({
-      title: "Error",
-      description: error.message,
-      color: "red",
-    })
+    handle(error, { title: 'Error' })
   } finally {
     loading.value = false
   }
