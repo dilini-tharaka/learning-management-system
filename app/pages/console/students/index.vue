@@ -5,26 +5,31 @@
         <!-- Header -->
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-2xl font-semibold">Users Management</h1>
-            <p class="text-gray-600 dark:text-zinc-400">Manage system users and their roles</p>
+            <h1 class="text-2xl font-semibold">Student Management</h1>
+            <p class="text-gray-600 dark:text-zinc-400">Manage student accounts and enrollments</p>
           </div>
           <UButton 
-            icon="i-heroicons-arrow-path" 
-            color="gray" 
-            :loading="refreshing"
-            @click="refreshData"
+            icon="i-heroicons-user-plus" 
+            @click="showInviteModal = true"
           >
-            Refresh
+            Add Student
           </UButton>
         </div>
 
         <!-- Filters -->
-        <ConsoleUsersUserFilters
-          @update:search="search = $event"
-          @update:role="role = $event"
-          @update:status="status = $event"
-          @invite="showInviteModal = true"
-        />
+        <div class="flex items-center gap-4">
+          <UInput
+            v-model="search"
+            icon="i-heroicons-magnifying-glass-20-solid"
+            placeholder="Search students..."
+            class="max-w-sm"
+          />
+          <USelect
+            v-model="status"
+            :options="['All Status', 'Active', 'Pending', 'Suspended']"
+            class="max-w-[200px]"
+          />
+        </div>
 
         <!-- Users Table -->
         <UTable
@@ -116,10 +121,10 @@
         </div>
       </div>
 
-      <!-- Invite Modal -->
-      <ConsoleUsersUserInviteModal
+      <!-- Student Invite Modal -->
+      <ConsoleStudentsStudentInviteModal
         v-model="showInviteModal"
-        @invite="inviteUser"
+        @invite="inviteStudent"
       />
     </NuxtLayout>
   </div>
@@ -142,7 +147,8 @@ const users = ref([
     email: 'john@example.com',
     role: 'ADMIN',
     status: 'Active',
-    lastActive: '2 hours ago'
+    lastActive: '2 hours ago',
+    grade: null
   },
   {
     id: 2,
@@ -279,12 +285,13 @@ const deleteUser = async (user: any) => {
   users.value = users.value.filter(u => u.id !== user.id)
 }
 
-const inviteUser = async (data: any) => {
-  // TODO: Implement invitation logic
+const inviteStudent = async (data: any) => {
   users.value.push({
     id: Date.now(),
     email: data.email,
-    role: data.role,
+    name: data.name,
+    grade: data.grade,
+    role: 'STUDENT',
     status: 'Pending',
     lastActive: null
   })

@@ -6,18 +6,18 @@
       <!-- Left Section: Mobile Menu + Search -->
       <div class="flex items-center flex-1">
         <!-- Mobile Menu Toggle -->
-        <button
-          class="md:hidden pr-4 h-10 flex items-center justify-center text-slate-500 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded-lg"
+        <UButton
+          class="md:hidden"
+          :icon="sidebarStore.isMobileOpen ? 'i-uil-times' : 'i-uil-bars'"
+          color="gray"
+          variant="ghost"
+          :ui="{ rounded: 'rounded-lg' }"
           @click="sidebarStore.toggleMobileMenu"
-        >
-          <Icon
-            :name="sidebarStore.isMobileOpen ? 'i-uil-times' : 'i-uil-bars'"
-            class="text-xl"
-          />
-        </button>
+          square
+        />
 
         <!-- Search Bar -->
-        <div class="flex-1 max-w-2xl">
+        <!-- <div class="flex-1 max-w-2xl">
           <div class="relative">
             <input
               type="text"
@@ -29,13 +29,13 @@
               class="absolute left-3 top-2.5 w-5 h-5 text-slate-400 dark:text-zinc-500"
             />
           </div>
-        </div>
+        </div> -->
       </div>
 
       <!-- Right Actions -->
       <div class="flex items-center space-x-2 md:space-x-4 ml-4">
         <!-- Export & Add Widget Buttons (Hidden on mobile) -->
-        <div
+        <!-- <div
           class="hidden md:flex rounded-lg border border-slate-200 dark:border-zinc-700 divide-x dark:divide-zinc-700"
         >
           <button
@@ -50,7 +50,7 @@
             <span class="hidden lg:inline">+ Add Widget</span>
             <Icon name="i-uil-plus" class="w-4 h-4 lg:hidden" />
           </button>
-        </div>
+        </div> -->
 
         <!-- Theme Toggle -->
         <UButton
