@@ -105,7 +105,7 @@
       </div>
 
       <!-- Student Invite Modal -->
-      <ConsoleStudentsStudentInviteModal
+      <ConsoleStudentsInviteModal
         v-model="showInviteModal"
         @invite="inviteStudent"
       />

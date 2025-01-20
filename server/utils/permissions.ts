@@ -1,7 +1,7 @@
 import type { Prisma, User } from "@prisma/client";
 
 export type Operation = "create" | "read" | "update" | "delete";
-export type Resource = "User" | "RefreshToken" | "Invitation" | "Student";
+export type Resource = "User" | "RefreshToken" | "Invitation" | "Student" | "Moderator";
 export type Role = "ADMIN" | "MODERATOR" | "STUDENT" | "PUBLIC";
 
 interface BasePermission<T = any> {
@@ -35,6 +35,7 @@ const PERMISSIONS: {
     RefreshToken?: RefreshTokenPermission;
     Invitation?: InvitationPermission;
     Student?: BasePermission;
+    Moderator?: BasePermission;
   };
 } = {
   ADMIN: {
@@ -53,6 +54,10 @@ const PERMISSIONS: {
     Student: {
       operations: ["create", "read", "update", "delete"],
       description: "Full access to all student operations",
+    },
+    Moderator: {
+      operations: ["create", "read", "update", "delete"],
+      description: "Full access to all moderator operations",
     },
   },
   MODERATOR: {
@@ -83,9 +88,31 @@ const PERMISSIONS: {
     Student: {
       operations: ["read"],
       description: "Can view all students",
-    }
+    },
+    Moderator: {
+      operations: ["read"],
+      description: "Can only read own profile",
+      conditions: (user) => ({
+        id: user.id,
+      }),
+    },
   },
-  STUDENT: {},
+  STUDENT: {
+    User: {
+      operations: ["read", "update"],
+      description: "Can read and update own profile",
+      resourceId: (user) => user.id,
+      check: (user, data) => user.id === data?.id,
+    },
+    Student: {
+      operations: ["create", "read", "update"],
+      description: "Can manage own student profile",
+      check: (user, data) => {
+        if (!data) return false;
+        return data.userId === user.id;
+      },
+    },
+  },
   PUBLIC: {
     Invitation: {
       operations: ["read", "update"],

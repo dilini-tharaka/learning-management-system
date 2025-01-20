@@ -10,11 +10,34 @@ interface AuthResponse {
   };
   accessToken?: string;
   message?: string;
+  isAccountSetup?: boolean;
 }
 
 export const useAuth = () => {
   const user = useState("user", () => null as AuthResponse["user"] | null);
   const accessToken = useState("access_token", () => null as string | null);
+
+  // Add refreshAccessToken function
+  const refreshAccessToken = async () => {
+    try {
+      // Call the refresh token API endpoint
+      const response = await $fetch<{ accessToken: string }>('/api/auth/session', {
+        method: 'GET',
+      });
+
+      // Update the access token in state
+      if (response.accessToken) {
+        accessToken.value = response.accessToken;
+        return response.accessToken;
+      }
+
+      throw new Error('Failed to refresh token');
+    } catch (error) {
+      user.value = null;
+      accessToken.value = null;
+      throw error;
+    }
+  };
 
   const signIn = async (credentials: SignInSchema) => {
     try {
@@ -26,12 +49,16 @@ export const useAuth = () => {
       user.value = response.user;
       accessToken.value = response.accessToken || null;
 
-      // Check for redirect
+      // Check if user is student and needs account setup
+      if (response.user.role === 'STUDENT' && !response.isAccountSetup) {
+        await navigateTo('/console/setup-account');
+        return response;
+      }
+
+      // Handle normal redirect for other cases
       const redirect = useState("redirect");
       const redirectPath = redirect.value || "/console";
       redirect.value = null; // Clear the redirect
-
-      // Navigate to saved path or default
       await navigateTo(redirectPath);
 
       return response;
@@ -105,5 +132,6 @@ export const useAuth = () => {
     signIn,
     signUp,
     signOut,
+    refreshAccessToken, // Export the new function
   };
 };

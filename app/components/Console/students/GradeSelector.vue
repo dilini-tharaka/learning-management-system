@@ -1,6 +1,6 @@
 <template>
   <USelect
-    v-model="(localValue as number)"
+    v-model="localValue"
     :options="formattedGrades"
     :placeholder="placeholder"
   />

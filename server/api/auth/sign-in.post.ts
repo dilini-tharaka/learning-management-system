@@ -4,6 +4,7 @@ import { generateTokens } from "../../utils/jwt";
 import { validateBody } from "../../utils/validation";
 import { signInSchema, type SignInSchema } from "../../../shared/schemas/auth";
 import { rateLimit } from "../../utils/rateLimit";
+import { Role } from "@prisma/client";
 
 export default defineEventHandler(async (event) => {
   // Rate limit: 5 attempts per minute
@@ -20,6 +21,9 @@ export default defineEventHandler(async (event) => {
     // Find user with lowercase email
     const user = await prisma.user.findUnique({
       where: { email: data.email.toLowerCase() },
+      include: {
+        studentProfile: true,
+      },
     });
 
     if (!user) {
@@ -49,6 +53,11 @@ export default defineEventHandler(async (event) => {
       });
     }
 
+    // Check student profile completion
+    const isAccountSetup =
+      user.role !== Role.STUDENT ||
+      (user.role === Role.STUDENT && user.studentProfile !== null);
+
     // Generate tokens with role
     const tokens = await generateTokens({
       userId: user.id,
@@ -72,6 +81,7 @@ export default defineEventHandler(async (event) => {
         name: user.name,
         role: user.role,
       },
+      isAccountSetup, // Add this property to response
       accessToken: tokens.accessToken, // Only send access token to client
     };
   } catch (error: any) {

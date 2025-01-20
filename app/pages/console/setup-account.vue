@@ -145,6 +145,8 @@ import { z } from "zod";
 
 const loading = ref(false);
 const toast = useToast();
+const { handle } = useApiError()
+
 const currentStep = ref(0);
 
 const steps = [
@@ -161,7 +163,7 @@ const form = ref({
   guardianPhone: "",
   address: "",
   school: "",
-  grade: "",
+  grade: null as number | null,
 });
 
 // Step-specific validation schemas
@@ -179,7 +181,7 @@ const contactInfoSchema = z.object({
 
 const educationSchema = z.object({
   school: z.string().min(1, "School name is required"),
-  grade: z.string().min(1, "Grade is required"),
+  grade: z.number().min(6, "Grade is required").max(11, "Grade is required"),
 });
 
 const schemas = [personalInfoSchema, contactInfoSchema, educationSchema];
@@ -197,8 +199,11 @@ const handleNext = async () => {
 const submitForm = async () => {
   try {
     loading.value = true;
-    // TODO: Implement API call to save profile
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
+    await $apiFetch('/api/students/setup-account', {
+      method: 'POST',
+      body: form.value
+    });
 
     toast.add({
       title: "Success",
@@ -206,13 +211,12 @@ const submitForm = async () => {
       color: "green",
     });
 
-    navigateTo("/console/dashboard");
+    navigateTo("/console");
   } catch (error: any) {
-    toast.add({
-      title: "Error",
-      description: error.message || "Something went wrong",
-      color: "red",
-    });
+    handle(error, { 
+      title: 'Profile Setup Failed',
+      fallback: 'Unable to complete profile setup. Please try again.'
+    })
   } finally {
     loading.value = false;
   }

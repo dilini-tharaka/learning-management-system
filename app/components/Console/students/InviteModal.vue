@@ -37,7 +37,7 @@
           </UFormGroup>
 
           <UFormGroup label="Grade" name="grade">
-            <GradeSelector
+            <ConsoleStudentsGradeSelector
               v-model="form.grade"
               placeholder="Select grade"
             />
@@ -59,9 +59,6 @@
 
 <script setup lang="ts">
 import { z } from 'zod'
-import GradeSelector from './GradeSelector.vue'
-import { $apiFetch } from '~~/app/composables/useApiFetch'
-import { useApiError } from '~~/app/composables/useApiError'
 import type { FormSubmitEvent } from "#ui/types"
 
 const props = defineProps<{
