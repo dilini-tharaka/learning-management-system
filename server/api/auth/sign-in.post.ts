@@ -3,29 +3,44 @@ import { prisma } from "../../utils/prisma";
 import { generateTokens } from "../../utils/jwt";
 import { validateBody } from "../../utils/validation";
 import { signInSchema, type SignInSchema } from "../../../shared/schemas/auth";
-import { rateLimit } from '../../utils/rateLimit'
+import { rateLimit } from "../../utils/rateLimit";
+import { Role } from "@prisma/client";
 
 export default defineEventHandler(async (event) => {
   // Rate limit: 5 attempts per minute
   await rateLimit({
     max: 5,
     window: 60,
-    message: 'Too many sign-in attempts. Please try again in a minute.'
-  })(event)
+    message: "Too many sign-in attempts. Please try again in a minute.",
+  })(event);
 
   try {
     // Validate and sanitize request body
     const data = await validateBody<SignInSchema>(event, signInSchema);
-    
+
     // Find user with lowercase email
     const user = await prisma.user.findUnique({
       where: { email: data.email.toLowerCase() },
+      include: {
+        studentProfile: true,
+      },
     });
 
     if (!user) {
       throw createError({
         statusCode: 401,
         message: "Invalid credentials",
+      });
+    }
+
+    // Check if user is active
+    if (user.status !== "ACTIVE") {
+      throw createError({
+        statusCode: 403,
+        message:
+          user.status === "PENDING"
+            ? "Your account is pending approval. Please wait for administrator confirmation."
+            : "Your account has been suspended. Please contact support.",
       });
     }
 
@@ -38,20 +53,25 @@ export default defineEventHandler(async (event) => {
       });
     }
 
+    // Check student profile completion
+    const isAccountSetup =
+      user.role !== Role.STUDENT ||
+      (user.role === Role.STUDENT && user.studentProfile !== null);
+
     // Generate tokens with role
     const tokens = await generateTokens({
       userId: user.id,
       email: user.email,
       name: user.name,
-      role: user.role
+      role: user.role,
     });
 
     // Set refresh token in HTTP-only cookie
-    setCookie(event, 'refresh_token', tokens.refreshToken, {
+    setCookie(event, "refresh_token", tokens.refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 // 7 days
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60, // 7 days
     });
 
     return {
@@ -59,19 +79,20 @@ export default defineEventHandler(async (event) => {
         id: user.id,
         email: user.email,
         name: user.name,
-        role: user.role
+        role: user.role,
       },
-      accessToken: tokens.accessToken // Only send access token to client
+      isAccountSetup, // Add this property to response
+      accessToken: tokens.accessToken, // Only send access token to client
     };
   } catch (error: any) {
     // Add rate limit specific error handling
     if (error.statusCode === 429) {
-      throw error
+      throw error;
     }
     throw createError({
       statusCode: error.statusCode || 500,
       message: error.message || "Internal server error",
-      data: error.data // Pass validation errors if any
+      data: error.data, // Pass validation errors if any
     });
   }
 });

@@ -6,13 +6,38 @@ interface AuthResponse {
     email: string;
     name: string | null;
     role: string;
+    status: string;
   };
-  accessToken: string;
+  accessToken?: string;
+  message?: string;
+  isAccountSetup?: boolean;
 }
 
 export const useAuth = () => {
   const user = useState("user", () => null as AuthResponse["user"] | null);
   const accessToken = useState("access_token", () => null as string | null);
+
+  // Add refreshAccessToken function
+  const refreshAccessToken = async () => {
+    try {
+      // Call the refresh token API endpoint
+      const response = await $fetch<{ accessToken: string }>('/api/auth/session', {
+        method: 'GET',
+      });
+
+      // Update the access token in state
+      if (response.accessToken) {
+        accessToken.value = response.accessToken;
+        return response.accessToken;
+      }
+
+      throw new Error('Failed to refresh token');
+    } catch (error) {
+      user.value = null;
+      accessToken.value = null;
+      throw error;
+    }
+  };
 
   const signIn = async (credentials: SignInSchema) => {
     try {
@@ -22,15 +47,19 @@ export const useAuth = () => {
       });
 
       user.value = response.user;
-      accessToken.value = response.accessToken;
+      accessToken.value = response.accessToken || null;
 
-      // Check for redirect
-      const redirect = useState('redirect')
-      const redirectPath = redirect.value || '/console'
-      redirect.value = null // Clear the redirect
-      
-      // Navigate to saved path or default
-      await navigateTo(redirectPath)
+      // Check if user is student and needs account setup
+      if (response.user.role === 'STUDENT' && !response.isAccountSetup) {
+        await navigateTo('/console/setup-account');
+        return response;
+      }
+
+      // Handle normal redirect for other cases
+      const redirect = useState("redirect");
+      const redirectPath = redirect.value || "/console";
+      redirect.value = null; // Clear the redirect
+      await navigateTo(redirectPath);
 
       return response;
     } catch (error: any) {
@@ -53,8 +82,24 @@ export const useAuth = () => {
         body: credentials,
       });
 
-      user.value = response.user;
-      accessToken.value = response.accessToken;
+      // Only set auth state if user is ACTIVE and tokens are provided
+      if (response.user.status === "ACTIVE" && response.accessToken) {
+        user.value = response.user;
+        accessToken.value = response.accessToken;
+        await navigateTo("/console/setup-account");
+      } else {
+        // For pending users, show success message and redirect to sign in
+        const toast = useToast();
+        toast.add({
+          title: "Account Created",
+          description:
+            response.message ||
+            "Please wait for administrator approval before signing in.",
+          color: "green",
+          timeout: 8000,
+        });
+        await navigateTo("/auth/sign-in");
+      }
 
       return response;
     } catch (error: any) {
@@ -75,7 +120,7 @@ export const useAuth = () => {
       // user.value = null;
       // accessToken.value = null;
       // Force reload to clear any cached state
-      window.location.href = '/auth/sign-in'
+      window.location.href = "/auth/sign-in";
     } catch (error) {
       console.error("Sign out error:", error);
     }
@@ -87,5 +132,6 @@ export const useAuth = () => {
     signIn,
     signUp,
     signOut,
+    refreshAccessToken, // Export the new function
   };
 };

@@ -6,7 +6,7 @@ import {
   signInSchema as signUpSchema,
   type SignInSchema,
 } from "../../../shared/schemas/auth";
-import { rateLimit } from '../../utils/rateLimit'
+import { rateLimit } from "../../utils/rateLimit";
 
 interface SignUpBody extends SignInSchema {
   invitationToken?: string;
@@ -17,11 +17,11 @@ export default defineEventHandler(async (event) => {
   await rateLimit({
     max: 3,
     window: 3600,
-    message: 'Too many sign-up attempts. Please try again in an hour.'
-  })(event)
+    message: "Too many sign-up attempts. Please try again in an hour.",
+  })(event);
 
   const config = useRuntimeConfig();
-  
+
   try {
     // Validate and sanitize request body
     const data = await validateBody<SignUpBody>(event, signUpSchema);
@@ -67,7 +67,8 @@ export default defineEventHandler(async (event) => {
         data: {
           email,
           password: hashedPassword,
-          role: invitation?.role || 'USER'  // Use invitation role if available
+          role: invitation?.role || "STUDENT", // Use invitation role if available
+          status: invitation ? "ACTIVE" : "PENDING", // Set status to ACTIVE if invitation exists
         },
       });
 
@@ -75,42 +76,58 @@ export default defineEventHandler(async (event) => {
       if (invitation) {
         await prisma.invitation.update({
           where: { id: invitation.id },
-          data: { status: "ACCEPTED" },
+          data: { status: "ACCEPTED", acceptedAt: new Date() },
         });
       }
 
       return newUser;
     });
 
-    // Generate tokens with role
-    const tokens = await generateTokens({
-      userId: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role
-    });
+    // Only generate tokens if user is ACTIVE (has invitation)
+    if (user.status === "ACTIVE") {
+      const tokens = await generateTokens({
+        userId: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      });
 
-    // Set refresh token in HTTP-only cookie
-    setCookie(event, 'refresh_token', tokens.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 // 7 days
-    })
+      // Set refresh token in HTTP-only cookie
+      setCookie(event, "refresh_token", tokens.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60, // 7 days
+      });
 
+      return {
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          status: user.status,
+        },
+        accessToken: tokens.accessToken,
+      };
+    }
+
+    // For pending users, return user info without tokens
     return {
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
-        role: user.role
+        role: user.role,
+        status: user.status,
       },
-      accessToken: tokens.accessToken // Only send access token to client
+      message: "Account created successfully. Please wait for administrator approval.",
     };
+
   } catch (error: any) {
     // Add rate limit specific error handling
     if (error.statusCode === 429) {
-      throw error
+      throw error;
     }
     throw createError({
       statusCode: error.statusCode || 500,

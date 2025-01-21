@@ -1,13 +1,13 @@
 <template>
   <NuxtLink
     :to="link.path"
-    class="flex items-center px-4 py-3 text-slate-600 dark:text-zinc-400 rounded-xl hover:bg-primary-50 dark:hover:bg-primary-950/50 hover:text-primary-600 dark:hover:text-primary-400 group transition-colors duration-200"
+    class="flex items-center px-4 py-3 text-slate-600 dark:text-zinc-400 rounded-xl hover:bg-primary-50 dark:hover:bg-primary-950/50 hover:text-primary-600 dark:hover:text-primary-400 group relative"
     :class="{
       'justify-center': isCollapsed,
       'bg-primary-50 dark:bg-primary-950/50 text-primary-600 dark:text-primary-400': isActive,
     }"
   >
-    <div class="relative flex items-center">
+    <div class="flex items-center flex-1" :class="{ 'justify-center': isCollapsed }">
       <Icon
         :name="link.icon"
         class="w-5 h-5"
@@ -20,13 +20,15 @@
       >
         {{ link.name }}
       </span>
-      <span
-        v-if="link.badge && !isCollapsed"
-        class="ml-auto bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400 text-xs font-medium px-2 py-0.5 rounded-full"
-      >
-        {{ link.badge }}
-      </span>
     </div>
+
+    <!-- Badge for non-collapsed state -->
+    <span
+      v-if="link.badge && !isCollapsed"
+      class="bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400 text-xs font-medium px-2 py-0.5 rounded-full ml-2"
+    >
+      {{ link.badge }}
+    </span>
 
     <!-- Tooltip for collapsed state -->
     <div

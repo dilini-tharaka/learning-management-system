@@ -1,8 +1,8 @@
 import type { Prisma, User } from "@prisma/client";
 
 export type Operation = "create" | "read" | "update" | "delete";
-export type Resource = "User" | "RefreshToken" | "Invitation";
-export type Role = "ADMIN" | "USER" | "PUBLIC";
+export type Resource = "User" | "RefreshToken" | "Invitation" | "Student" | "Moderator";
+export type Role = "ADMIN" | "MODERATOR" | "STUDENT" | "PUBLIC";
 
 interface BasePermission<T = any> {
   operations: Operation[];
@@ -34,6 +34,8 @@ const PERMISSIONS: {
     User?: UserPermission;
     RefreshToken?: RefreshTokenPermission;
     Invitation?: InvitationPermission;
+    Student?: BasePermission;
+    Moderator?: BasePermission;
   };
 } = {
   ADMIN: {
@@ -49,8 +51,16 @@ const PERMISSIONS: {
       operations: ["create", "read", "update", "delete"],
       description: "Full control over invitations",
     },
+    Student: {
+      operations: ["create", "read", "update", "delete"],
+      description: "Full access to all student operations",
+    },
+    Moderator: {
+      operations: ["create", "read", "update", "delete"],
+      description: "Full access to all moderator operations",
+    },
   },
-  USER: {
+  MODERATOR: {
     User: {
       operations: ["read", "update"],
       description: "Can read and update own profile",
@@ -65,12 +75,42 @@ const PERMISSIONS: {
       }),
     },
     Invitation: {
-      operations: ["read"],
-      description: "Can view invitations sent to their email",
+      operations: ["create", "read"],
+      description: "can send invitations to students",
       conditions: (user) => ({
-        email: user.email,
+        role: "STUDENT",
         status: "PENDING",
       }),
+      check: (user, data) => {
+        return data.role === "STUDENT";
+      },
+    },
+    Student: {
+      operations: ["read"],
+      description: "Can view all students",
+    },
+    Moderator: {
+      operations: ["read"],
+      description: "Can only read own profile",
+      conditions: (user) => ({
+        id: user.id,
+      }),
+    },
+  },
+  STUDENT: {
+    User: {
+      operations: ["read", "update"],
+      description: "Can read and update own profile",
+      resourceId: (user) => user.id,
+      check: (user, data) => user.id === data?.id,
+    },
+    Student: {
+      operations: ["create", "read", "update"],
+      description: "Can manage own student profile",
+      check: (user, data) => {
+        if (!data) return false;
+        return data.userId === user.id;
+      },
     },
   },
   PUBLIC: {

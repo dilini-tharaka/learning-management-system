@@ -17,15 +17,14 @@
           class="flex items-center"
           :class="{ 'justify-center': sidebarStore.isCollapsed }"
         >
-          <img src="/logo.png" alt="Logo" class="h-10 w-auto" />
+          <img src="/logo.webp" alt="Logo" class="h-10 w-auto" />
           <div v-if="!sidebarStore.isCollapsed" class="flex flex-col ml-3">
-            <span class="text-lg font-bold text-slate-900 dark:text-white"
-              >Nuxt Kit</span
-            >
-            <span
-              class="text-sm text-slate-500 dark:text-zinc-400 capitalize"
-              >{{ user?.role?.toLowerCase() }}</span
-            >
+            <span class="text-lg font-bold text-slate-900 dark:text-white uppercase">
+              Science<span class="text-primary">Lab</span>
+            </span>
+            <span class="text-sm text-slate-500 dark:text-zinc-400 capitalize">
+              {{ user?.role?.toLowerCase() }}
+            </span>
           </div>
         </div>
       </div>
@@ -140,7 +139,12 @@ nav::-webkit-scrollbar {
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { debounce } from "lodash-es";
-import { mainNavLinks, otherLinks, accountLinks } from "~/config/navigation";
+import {
+  mainNavLinks,
+  otherLinks,
+  accountLinks,
+  type Role,
+} from "~/config/navigation";
 
 const sidebarStore = useSidebarStore();
 const route = useRoute();
@@ -177,19 +181,25 @@ onUnmounted(() => {
 // Navigation Links
 const filteredMainNavLinks = computed(() => {
   return mainNavLinks.filter(
-    (link) => !link.roles || link.roles.includes(user.value?.role || "")
+    (link) =>
+      !link.roles ||
+      link.roles.includes((user.value?.role as Role) || ("STUDENT" as Role))
   );
 });
 
 const filteredOtherLinks = computed(() => {
   return otherLinks.filter(
-    (link) => !link.roles || link.roles.includes(user.value?.role || "")
+    (link) =>
+      !link.roles ||
+      link.roles.includes((user.value?.role as Role) || ("STUDENT" as Role))
   );
 });
 
 const filteredAccountLinks = computed(() => {
   return accountLinks.filter(
-    (link) => !link.roles || link.roles.includes(user.value?.role || "")
+    (link) =>
+      !link.roles ||
+      link.roles.includes((user.value?.role as Role) || ("STUDENT" as Role))
   );
 });
 

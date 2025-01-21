@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Invitation to Join</title>
+    <title>Moderator Invitation</title>
     <style>
       :root {
         --text-primary: #2c3e50;
@@ -47,7 +47,6 @@
               box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             "
           >
-            <!-- Header -->
             <tr>
               <td style="padding: 40px 30px; text-align: center">
                 <img
@@ -57,8 +56,6 @@
                 />
               </td>
             </tr>
-
-            <!-- Main Content -->
             <tr>
               <td
                 style="
@@ -73,10 +70,9 @@
                     margin: 0 0 25px;
                     text-align: center;
                     font-weight: 700;
-                    letter-spacing: -0.5px;
                   "
                 >
-                  You're Invited! 🎉
+                  Join Our Teaching Team! 👨‍🏫
                 </h1>
                 <p
                   style="
@@ -95,8 +91,9 @@
                       padding: 2px 8px;
                       border-radius: 4px;
                     "
-                    >{{role}}</strong
                   >
+                    Moderator
+                  </strong>
                 </p>
                 <p
                   style="
@@ -108,10 +105,8 @@
                   "
                 >
                   <strong style="color: #2c3e50">{{inviterName}}</strong> has
-                  invited you to collaborate on our platform.
+                  invited you to join our teaching staff.
                 </p>
-
-                <!-- Action Buttons -->
                 <div style="text-align: center; margin: 35px 0">
                   <a
                     href="{{invitationLink}}/accept?email={{email}}"
@@ -125,7 +120,6 @@
                       font-weight: 600;
                       font-size: 16px;
                       margin: 0 10px 15px;
-                      transition: background-color 0.3s ease;
                     "
                   >
                     ✓ Accept Invitation
@@ -143,14 +137,48 @@
                       font-size: 16px;
                       margin: 0 10px 15px;
                       border: 2px solid #dc3545;
-                      transition: all 0.3s ease;
                     "
                   >
                     ✕ Decline
                   </a>
                 </div>
-
-                <!-- Expiry Notice -->
+                <div
+                  style="
+                    background-color: #f8f9fa;
+                    border-radius: 8px;
+                    padding: 20px;
+                    margin-top: 30px;
+                  "
+                >
+                  <p
+                    style="
+                      color: #6c757d;
+                      font-size: 14px;
+                      text-align: center;
+                      margin: 0 0 15px;
+                    "
+                  >
+                    As a moderator, you'll be able to:
+                  </p>
+                  <ul
+                    style="
+                      list-style: none;
+                      padding: 0;
+                      margin: 0;
+                      text-align: center;
+                    "
+                  >
+                    <li style="color: #505965; margin: 10px 0">
+                      ✓ Manage student accounts
+                    </li>
+                    <li style="color: #505965; margin: 10px 0">
+                      ✓ Monitor learning progress
+                    </li>
+                    <li style="color: #505965; margin: 10px 0">
+                      ✓ Assist with course content
+                    </li>
+                  </ul>
+                </div>
                 <p
                   style="
                     color: #6c757d;
@@ -165,8 +193,6 @@
                 </p>
               </td>
             </tr>
-
-            <!-- Footer -->
             <tr>
               <td
                 style="

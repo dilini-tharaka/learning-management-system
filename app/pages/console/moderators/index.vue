@@ -5,30 +5,35 @@
         <!-- Header -->
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-2xl font-semibold">Users Management</h1>
-            <p class="text-gray-600 dark:text-zinc-400">Manage system users and their roles</p>
+            <h1 class="text-2xl font-semibold">Moderator Management</h1>
+            <p class="text-gray-600 dark:text-zinc-400">Manage system moderators and their permissions</p>
           </div>
           <UButton 
-            icon="i-heroicons-arrow-path" 
-            color="gray" 
-            :loading="refreshing"
-            @click="refreshData"
+            icon="i-heroicons-user-plus" 
+            @click="showInviteModal = true"
           >
-            Refresh
+            Add Moderator
           </UButton>
         </div>
 
         <!-- Filters -->
-        <ConsoleUsersUserFilters
-          @update:search="search = $event"
-          @update:role="role = $event"
-          @update:status="status = $event"
-          @invite="showInviteModal = true"
-        />
+        <div class="flex items-center gap-4">
+          <UInput
+            v-model="search"
+            icon="i-heroicons-magnifying-glass-20-solid"
+            placeholder="Search moderators..."
+            class="max-w-sm"
+          />
+          <USelect
+            v-model="status"
+            :options="['All Status', 'Active', 'Pending', 'Suspended']"
+            class="max-w-[200px]"
+          />
+        </div>
 
         <!-- Users Table -->
         <UTable
-          :rows="paginatedUsers"
+          :rows="paginatedModerators"
           :columns="columns"
           :loading="refreshing"
           :ui="{
@@ -106,7 +111,7 @@
         <div class="flex justify-center">
           <UPagination
             v-model="currentPage"
-            :total="filteredUsers.length"
+            :total="filteredModerators.length"
             :per-page="perPage"
             :ui="{
               wrapper: 'gap-1',
@@ -116,89 +121,83 @@
         </div>
       </div>
 
-      <!-- Invite Modal -->
-      <ConsoleUsersUserInviteModal
+      <!-- Moderator Invite Modal -->
+      <ConsoleModeratorsModeratorInviteModal
         v-model="showInviteModal"
-        @invite="inviteUser"
+        @invite="inviteModerator"
       />
     </NuxtLayout>
   </div>
 </template>
 
 <script setup lang="ts">
+import type { Moderator, ModeratorsResponse } from '~/types/moderator'
+
 const refreshing = ref(false)
 const showInviteModal = ref(false)
+const toast = useToast()
 
 // Filters
 const search = ref('')
-const role = ref('All Roles')
 const status = ref('All Status')
 
-// Mock data
-const users = ref([
-  {
-    id: 1,
-    name: 'John Doe',
-    email: 'john@example.com',
-    role: 'ADMIN',
-    status: 'Active',
-    lastActive: '2 hours ago'
-  },
-  {
-    id: 2,
-    email: 'jane@example.com',
-    role: 'USER',
-    status: 'Pending',
-    lastActive: null
-  },
-  {
-    id: 3,
-    name: 'Mike Smith',
-    email: 'mike@example.com',
-    role: 'USER',
-    status: 'Suspended',
-    lastActive: '5 days ago'
-  }
-])
+// Moderators data
+const moderators = ref<Moderator[]>([])
 
-// Pagination
+// Add pagination
 const currentPage = ref(1)
 const perPage = ref(10)
 
+// Fetch moderators data
+const fetchModerators = async () => {
+  try {
+    refreshing.value = true
+    const response = await $apiFetch<ModeratorsResponse>('/api/moderators')
+    moderators.value = response.moderators
+  } catch (error: any) {
+    toast.add({
+      title: 'Error',
+      description: error.message || 'Failed to load moderators',
+      color: 'red'
+    })
+  } finally {
+    refreshing.value = false
+  }
+}
+
+// Load data on mount
+onMounted(fetchModerators)
+
 // Computed
-const filteredUsers = computed(() => {
-  return users.value.filter(user => {
+const filteredModerators = computed(() => {
+  return moderators.value.filter(moderator => {
     const matchesSearch = search.value === '' || 
-      user.email.toLowerCase().includes(search.value.toLowerCase()) ||
-      (user.name?.toLowerCase().includes(search.value.toLowerCase()))
-    const matchesRole = role.value === 'All Roles' || user.role === role.value
-    const matchesStatus = status.value === 'All Status' || user.status === status.value
-    return matchesSearch && matchesRole && matchesStatus
+      moderator.email.toLowerCase().includes(search.value.toLowerCase()) ||
+      (moderator.name?.toLowerCase()?.includes(search.value.toLowerCase()))
+    const matchesStatus = status.value === 'All Status' || moderator.status === status.value
+    return matchesSearch && matchesStatus
   })
 })
 
-const paginatedUsers = computed(() => {
+const paginatedModerators = computed(() => {
   const start = (currentPage.value - 1) * perPage.value
   const end = start + perPage.value
-  return filteredUsers.value.slice(start, end)
+  return filteredModerators.value.slice(start, end)
 })
 
+// Updated columns definition
 const columns = [
   {
     key: 'name',
-    label: 'User',
-  },
-  {
-    key: 'role',
-    label: 'Role',
+    label: 'Moderator',
   },
   {
     key: 'status',
     label: 'Status',
   },
   {
-    key: 'lastActive',
-    label: 'Last Activity',
+    key: 'invitedBy',
+    label: 'Invited By',
   },
   {
     key: 'actions',
@@ -207,91 +206,77 @@ const columns = [
   }
 ]
 
-// Methods
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'Active': return 'green'
-    case 'Pending': return 'orange'
-    case 'Suspended': return 'red'
-    default: return 'gray'
+// Simulated actions
+const simulateAction = async (action: string, moderator: Moderator) => {
+  try {
+    refreshing.value = true
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    toast.add({
+      title: 'Success',
+      description: `Successfully ${action} moderator: ${moderator.email}`,
+      color: 'green'
+    })
+    
+    await fetchModerators()
+  } catch (error: any) {
+    toast.add({
+      title: 'Error',
+      description: error.message || `Failed to ${action} moderator`,
+      color: 'red'
+    })
+  } finally {
+    refreshing.value = false
   }
 }
 
-const getUserActions = (user: any) => {
+const getUserActions = (moderator: Moderator) => {
   const mainActions = []
   const dangerActions = []
-  
-  if (user.role === 'USER') {
+
+  if (moderator.status === 'ACTIVE') {
     mainActions.push({
-      label: 'Promote to Admin',
-      icon: 'i-heroicons-shield-check',
-      click: () => promoteUser(user)
+      label: 'Suspend Moderator',
+      icon: 'i-heroicons-lock-closed',
+      click: () => simulateAction('suspend', moderator)
+    })
+  } else if (moderator.status === 'SUSPENDED') {
+    mainActions.push({
+      label: 'Reactivate Moderator',
+      icon: 'i-heroicons-lock-open',
+      click: () => simulateAction('reactivate', moderator)
     })
   }
 
-  if (user.status === 'Active') {
+  if (moderator.isPendingInvitation) {
     mainActions.push({
-      label: 'Suspend User',
-      icon: 'i-heroicons-lock-closed',
-      click: () => suspendUser(user)
-    })
-  } else if (user.status === 'Suspended') {
-    mainActions.push({
-      label: 'Reactivate User',
-      icon: 'i-heroicons-lock-open',
-      click: () => reactivateUser(user)
+      label: 'Resend Invitation',
+      icon: 'i-heroicons-envelope',
+      click: () => simulateAction('resend invitation to', moderator)
     })
   }
 
   dangerActions.push({
-    label: 'Delete User',
+    label: 'Delete Moderator',
     icon: 'i-heroicons-trash',
-    click: () => deleteUser(user)
+    click: () => simulateAction('delete', moderator)
   })
 
   return [mainActions, dangerActions]
 }
 
-// Actions
-const refreshData = async () => {
-  refreshing.value = true
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  refreshing.value = false
+// Invite moderator handler
+const inviteModerator = async () => {
+  await fetchModerators() // Refresh list after new invitation
 }
 
-const promoteUser = async (user: any) => {
-  // TODO: Implement promotion logic
-  user.role = 'ADMIN'
-}
-
-const suspendUser = async (user: any) => {
-  // TODO: Implement suspension logic
-  user.status = 'Suspended'
-}
-
-const reactivateUser = async (user: any) => {
-  // TODO: Implement reactivation logic
-  user.status = 'Active'
-}
-
-const deleteUser = async (user: any) => {
-  // TODO: Implement deletion logic
-  users.value = users.value.filter(u => u.id !== user.id)
-}
-
-const inviteUser = async (data: any) => {
-  // TODO: Implement invitation logic
-  users.value.push({
-    id: Date.now(),
-    email: data.email,
-    role: data.role,
-    status: 'Pending',
-    lastActive: null
-  })
-}
-
-const resendInvitation = async (user: any) => {
-  // TODO: Implement resend logic
-  console.log('Resending invitation to:', user.email)
+// Status color helper
+const getStatusColor = (status: Moderator['status']) => {
+  switch (status) {
+    case 'ACTIVE': return 'green'
+    case 'PENDING': return 'orange'
+    case 'SUSPENDED': return 'red'
+    default: return 'gray'
+  }
 }
 </script>

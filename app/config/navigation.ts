@@ -1,71 +1,74 @@
-type NavLink = {
+export type NavLink = {
   name: string;
   path: string;
   icon: string;
   badge?: string;
-  roles?: string[];
-}
+  roles?: Role[];
+};
+
+export type Role = "ADMIN" | "MODERATOR" | "STUDENT";
 
 export const mainNavLinks: NavLink[] = [
   {
     name: "Dashboard",
     path: "/console",
-    icon: "i-uil-apps",
-    roles: ['ADMIN', 'USER']
+    icon: "i-uil-dashboard",
+    roles: ["ADMIN", "MODERATOR", "STUDENT"],
   },
   {
-    name: "Users",
-    path: "/console/users",
-    icon: "i-uil-users-alt",
-    roles: ['ADMIN']
+    name: "Students",
+    path: "/console/students",
+    icon: "i-uil-graduation-cap",
+    roles: ["ADMIN", "MODERATOR"],
   },
   {
-    name: "Payments",
-    path: "/console/payments",
-    icon: "i-uil-money-bill",
-    roles: ['ADMIN']
+    name: "Moderators",
+    path: "/console/moderators",
+    icon: "i-uil-user-check",
+    roles: ["ADMIN"],
   },
-  {
-    name: "Email",
-    path: "/console/email",
-    icon: "i-uil-envelope",
-    roles: ['ADMIN']
-  }
 ];
 
 export const otherLinks: NavLink[] = [
   {
-    name: "Analytics",
-    path: "/console/analytics",
-    icon: "i-uil-chart-line",
-    roles: ['ADMIN']
+    name: "Lessons",
+    path: "/console/lessons",
+    icon: "i-uil-book-open",
+    roles: ["ADMIN", "MODERATOR", "STUDENT"],
   },
   {
-    name: "Tasks",
-    path: "/console/tasks",
-    icon: "i-uil-clipboard-notes",
+    name: "Quizzes",
+    path: "/console/quizzes",
+    icon: "i-uil-file-question",
     badge: "5",
-    roles: ['ADMIN', 'USER']
-  }
+    roles: ["ADMIN", "MODERATOR", "STUDENT"],
+  },
+  {
+    name: "Products",
+    path: "/console/products",
+    icon: "i-uil-box",
+    roles: ["ADMIN"],
+  },
+  {
+    name: "Orders",
+    path: "/console/orders",
+    icon: "i-uil-shopping-cart",
+    badge: "12",
+    roles: ["ADMIN", "MODERATOR"],
+  },
 ];
 
 export const accountLinks: NavLink[] = [
   {
     name: "Settings",
     path: "/console/settings",
-    icon: "i-uil-setting",
-    roles: ['ADMIN', 'USER']
-  },
-  {
-    name: "Profile",
-    path: "/console/profile",
-    icon: "i-uil-user-circle",
-    roles: ['ADMIN', 'USER']
+    icon: "i-uil-cog",
+    roles: ["ADMIN", "STUDENT", "MODERATOR"],
   },
   {
     name: "Help",
     path: "/console/help",
-    icon: "i-uil-question-circle",
-    roles: ['ADMIN', 'USER']
-  }
+    icon: "i-uil-life-ring",
+    roles: ["ADMIN"],
+  },
 ];
