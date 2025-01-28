@@ -15,7 +15,7 @@
           size="lg"
           color="primary"
           icon="i-heroicons-plus-circle"
-          @click="showModal = true"
+          to="/console/quizzes/new"
         >
           Create Quiz
         </UButton>
