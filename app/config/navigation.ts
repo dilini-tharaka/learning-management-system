@@ -47,7 +47,7 @@ export const otherLinks: NavLink[] = [
     name: "Products",
     path: "/console/products",
     icon: "i-uil-box",
-    roles: ["ADMIN"],
+    roles: ["ADMIN", "STUDENT", "MODERATOR"], // temp access for  moderators
   },
   {
     name: "Orders",
@@ -59,6 +59,12 @@ export const otherLinks: NavLink[] = [
 ];
 
 export const accountLinks: NavLink[] = [
+  {
+    name: "Withdrawals",
+    path: "/console/withdrawals",
+    icon: "i-uil-wallet",
+    roles: ["STUDENT"],
+  },
   {
     name: "Settings",
     path: "/console/settings",

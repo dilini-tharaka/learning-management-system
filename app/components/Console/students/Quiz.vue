@@ -33,7 +33,7 @@
             <div 
                 v-for="quiz in filteredQuizzes" 
                 :key="quiz.id"
-                class="bg-white dark:bg-zinc-800 rounded-lg shadow-sm border border-gray-200 dark:border-zinc-700 overflow-hidden transition-all duration-300 hover:shadow-md hover:scale-[1.02] hover:border-gray-300 dark:hover:border-zinc-600 cursor-pointer relative p-6"
+                class="bg-white dark:bg-zinc-800 rounded-lg shadow-sm border border-gray-200 dark:border-zinc-700 overflow-hidden cursor-pointer relative p-6"
             >
                 <!-- Quiz Title and Status Badge -->
                 <div class="flex justify-between items-start mb-4">
