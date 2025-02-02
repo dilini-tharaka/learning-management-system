@@ -6,11 +6,8 @@
       <div class="flex h-16 items-center justify-between">
         <div class="flex items-center gap-2">
           <NuxtLink to="/" class="flex items-center gap-2">
-            <UIcon
-              name="i-heroicons-cube-transparent"
-              class="text-primary w-8 h-8"
-            />
-            <span class="font-bold text-lg">Nuxt Starter Kit</span>
+            <img src="/logo.webp" alt="logo" class="h-8" />
+            <span class="font-bold text-lg">Science Lab</span>
           </NuxtLink>
 
           <div class="hidden md:flex md:gap-x-6 ml-10">
@@ -48,7 +45,7 @@
           >
             Sign In
           </UButton>
-          <UButton to="/auth/sign-up" color="primary"> Get Started </UButton>
+          <UButton to="/auth/sign-up" color="primary"> Join Now </UButton>
         </div>
       </div>
     </nav>

@@ -5,7 +5,7 @@
         <div class="col-span-2 md:col-span-1">
           <div class="flex items-center gap-2 mb-6">
             <UIcon name="i-heroicons-cube-transparent" class="text-primary w-8 h-8" />
-            <span class="font-bold text-lg">Nuxt Starter Kit</span>
+            <span class="font-bold text-lg">Science Lab LMS</span>
           </div>
           <p class="text-sm text-gray-500 dark:text-zinc-400 mb-4">
             Modern web development starter kit with everything you need to build amazing products.
@@ -40,7 +40,7 @@
 
       <div class="border-t border-gray-200 dark:border-zinc-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
         <p class="text-sm text-gray-500 dark:text-zinc-400">
-          © {{ new Date().getFullYear() }} Nuxt Starter Kit. All rights reserved.
+          © {{ new Date().getFullYear() }} Science Lab LMS. All rights reserved.
         </p>
         <div class="flex gap-6">
           <a href="#" class="text-sm text-gray-500 hover:text-primary dark:text-zinc-400">
@@ -64,9 +64,9 @@ const footerLinks = [
     title: 'Product',
     links: [
       { label: 'Features', to: '#features' },
-      { label: 'Pricing', to: '#pricing' },
-      { label: 'Documentation', to: '#docs' },
-      { label: 'Changelog', to: '/changelog' },
+      { label: 'About us', to: '#pricing' },
+      { label: 'Testimonials', to: '#docs' },
+      { label: 'Join with us', to: '/changelog' },
     ]
   },
   {

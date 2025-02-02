@@ -9,6 +9,8 @@ export default defineNuxtConfig({
 
   modules: ["@nuxt/ui", "@pinia/nuxt", "@uploadthing/nuxt"],
 
+  css: ["~/assets/css/theme.css"],
+
   icon: {
     serverBundle: {
       collections: ["uil"],

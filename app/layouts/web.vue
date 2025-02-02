@@ -12,9 +12,9 @@
 
 <script setup lang="ts">
 const headerLinks = [
-  { label: "Features", to: "#features" },
-  { label: "Pricing", to: "#pricing" },
-  { label: "Documentation", to: "#docs" },
+  { label: "Home", to: "#features" },
+  { label: "About us", to: "#pricing" },
+  { label: "Testimonials", to: "#docs" },
 ];
 
 const footerLinks = [
