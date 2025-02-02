@@ -1,5 +1,5 @@
 <template>
-    <div class="bg-white dark:bg-zinc-800 rounded-lg shadow-sm border border-gray-200 dark:border-zinc-700 overflow-hidden cursor-pointer relative">
+    <div class="bg-white dark:bg-zinc-800 rounded-lg shadow-sm border border-gray-200 dark:border-zinc-700 overflow-hidden hover:shadow-md hover:border-gray-300 dark:hover:border-zinc-600 cursor-pointer relative">
         <!-- Lesson Image -->
         <div class="h-48 w-full bg-gray-100 dark:bg-zinc-900 relative overflow-hidden">
             <img :src="imageUrl" :alt="`${title} thumbnail`" class="w-full h-full object-cover" />
