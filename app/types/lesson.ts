@@ -1,6 +1,7 @@
 export interface Lesson {
   id: number;
   title: string;
+  s
   description: string;
   duration: number;
   level: 'Beginner' | 'Intermediate' | 'Advanced';
