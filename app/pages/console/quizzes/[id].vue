@@ -167,18 +167,17 @@ const quiz = ref({
     ]
 })
 
+// Current question index and user answers
 const currentQuestionIndex = ref(0)
 const userAnswers = ref([])
 
+// Computed properties
 const currentQuestion = computed(() => quiz.value.questions[currentQuestionIndex.value])
-
 const answeredQuestionIndexes = computed(() => {
-    return userAnswers.value.reduce((indexes, answer, index) => {
-        if (answer) indexes.push(index + 1)
-        return indexes
-    }, [])
+    return userAnswers.value.map((answer, index) => answer ? index : null).filter(index => index !== null)
 })
 
+// Navigation functions
 const previousQuestion = () => {
     if (currentQuestionIndex.value > 0) {
         currentQuestionIndex.value--
@@ -194,7 +193,9 @@ const nextQuestion = () => {
 }
 
 const jumpToQuestion = (index) => {
-    currentQuestionIndex.value = index - 1
+    if (index >= 0 && index < quiz.value.questions.length) {
+        currentQuestionIndex.value = index
+    }
 }
 
 const saveAnswer = (answer) => {
@@ -206,8 +207,22 @@ const handleTimeUp = () => {
 }
 
 const submitQuiz = () => {
-    // TODO: Implement quiz submission
+    // Check if all questions are answered
+    const unansweredQuestions = userAnswers.value.findIndex(answer => answer === null)
+    
+    if (unansweredQuestions !== -1) {
+        // Show warning about unanswered questions
+        alert(`You have ${userAnswers.value.filter(a => a === null).length} unanswered questions. Please answer all questions before submitting.`)
+        // Jump to first unanswered question
+        currentQuestionIndex.value = unansweredQuestions
+        return
+    }
+
+    // Process quiz submission
     console.log('Quiz submitted:', userAnswers.value)
+    // Here you would typically make an API call to submit the answers
+    
+    // Navigate to results page or show results modal
     router.push('/console/quizzes')
 }
 

@@ -115,16 +115,25 @@ const props = defineProps({
 
 const emit = defineEmits(['previous', 'next', 'answer'])
 
+// Initialize selectedOption with savedAnswer if it exists
 const selectedOption = ref(props.savedAnswer)
-const isLastQuestion = computed(() => props.currentNumber === props.totalQuestions)
 
-watch(selectedOption, (newValue) => {
-    if (newValue) {
-        emit('answer', newValue)
-    }
+// Watch for question changes to update selectedOption
+watch(() => props.question, () => {
+    selectedOption.value = props.savedAnswer
+}, { immediate: true })
+
+// Watch for savedAnswer changes
+watch(() => props.savedAnswer, (newValue) => {
+    selectedOption.value = newValue
+})
+
+const isLastQuestion = computed(() => {
+    return props.currentNumber === props.totalQuestions
 })
 
 const selectOption = (optionId) => {
     selectedOption.value = optionId
+    emit('answer', optionId)
 }
 </script>
