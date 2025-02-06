@@ -236,34 +236,6 @@
   </div>
 </template>
 
-<style scoped>
-.animate-fade-in {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-</style>
-
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import type { Quiz } from "~/types/quiz";
